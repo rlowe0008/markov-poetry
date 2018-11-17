@@ -1,1 +1,163 @@
- Hello, World!
+<html>
+
+<head>
+	<title>Markov Poetry</title>
+	<meta charset="UTF-8">
+	<script src="data.js"></script>
+	<link rel="stylesheet" href="bootstrap.min.css">
+	<link href="https://fonts.googleapis.com/css?family=EB+Garamond" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+	<style>
+	body{
+		font-family: 'EB Garamond', serif;
+		text-align: center;
+		color: #000F08;
+	}
+	h1{
+		font-size: 8vmin;
+		padding-left: 4vmin;
+	}
+	p{
+		font-size: 4vmin;
+		padding: 4vmin;
+		padding-top: 2vmin;
+	}
+	.btn{
+		font-size: 4vmin !important;
+		color: white !important;
+	}
+	.main-title{
+		font-family: 'Abril Fatface', serif;
+		font-size: 15vmin;
+		padding-left: 0px; padding-top: 10vmax;
+	}
+	.mini{
+		font-size: 8vmin; padding-top: 10vh;
+		text-transform: uppercase;
+	}
+	#scheme-example{
+		color: #F34213;
+		font-style: italic;
+	}
+	#rhyme{
+		width: 80%;
+		max-width: 800px;
+		min-width: 200px;
+		font-size: 8vmin;
+		font-weight: bold;
+		text-align: center;
+	}
+	#poetry-div{
+		width: 100%; height: 100%;
+		background-color: white;
+		position: absolute;
+		top: 0; left: 0;
+	}
+	</style>
+
+	<script>
+		var scheme;
+		var preset_val;
+		var poem = '';
+
+		var presets = [['ABAB', 'Alternate Rhyme'], ['AABB', 'Couplet'], ['ABBA', 'Enclosed Rhyme'], ['ABABCDCDEFEFGG', 'English Sonnet'], ['ABBAABBACDECDE', 'Petrarchan Sonnet']];
+
+		function setPreset(is_load=true){
+			preset_num = Math.floor(Math.random() * presets.length);
+			preset_val = presets[preset_num][0];
+			document.getElementById("scheme-example").innerHTML = preset_val + ' (' + presets[preset_num][1] + ')';
+			if (is_load){
+				$("#poetry-div").fadeToggle(0);
+				$("#learn-panel").fadeToggle(0);
+			}else{
+				$("#poetry-div").fadeToggle('slow');
+			}
+			
+		}
+
+		function makePoem(){
+			poem = '';
+			scheme = document.getElementById("rhyme").value;
+			if (scheme.length > 14){
+				alert("Your poem can be no longer than 14 lines.");
+				scheme = '';
+			}
+			lengths = '77777777777777';
+			scheme_map = {};
+
+			for (var i = 0; i<scheme.length; i++){
+				var char = scheme[i];
+				var words_per_line = parseInt(lengths[i]);
+				var currentword;
+				if (char in scheme_map){
+					currentword = scheme_map[char][Math.floor(Math.random() * scheme_map[char].length)];
+					//scheme_map[char] = scheme_map[char].filter(e => !e.includes(currentword));
+				}else{
+					scheme_map[char] = rhymes_array[Math.floor(Math.random() * rhymes_array.length)];
+					currentword = scheme_map[char][Math.floor(Math.random() * scheme_map[char].length)];
+				}
+				var line = '';
+				for (var word = 0; word < words_per_line; word++){
+					line = currentword + ' ' + line;
+					if (currentword in probability_map){
+						currentword = probability_map[currentword][Math.floor(Math.random() * probability_map[currentword].length)];
+					}else{
+						currentword = words_array[Math.floor(Math.random() * words_array.length)];
+					}
+				}
+				poem = poem + line + '<br>';
+			}
+			if (scheme != ''){
+				while (poem.includes("â")){
+					poem = poem.replace("â", "");
+				}
+				document.getElementById("poetry-p").innerHTML = poem;
+				document.getElementById("poetry-div").style.visibility = 'visible';
+				$("#poetry-div").fadeToggle('slow');
+				document.getElementById("poem-title").innerHTML = '"' + poem.split(" ")[0] + '"';
+			}else{
+				alert("Please enter a rhyme scheme.");
+			}
+		}
+
+		function usePreset(){
+			document.getElementById("rhyme").value = preset_val;
+		}
+
+		function share(){
+			var share_poem = poem;
+			while (share_poem.includes("<br>")){
+				share_poem = share_poem.replace("<br>", "\n")
+			}
+			share_poem = "\n" + share_poem + "\n"
+			window.location.href = "https://twitter.com/intent/tweet?text=Check out this Markov Poem - make your own at https://rlowe0008.github.io/markov-poetry/" + encodeURI(share_poem) + '&hashtags=markovpoetry';
+		}
+	</script>
+</head>
+
+<body onload="setPreset();">
+
+	<div align="center">
+		<h1 class="main-title">MARKOV POETRY</h1>
+
+		<p>Choose a rhyme scheme, for example <a id="scheme-example" onclick="usePreset();" href="#">ABAB</a></p>
+
+		<input type="text" id="rhyme"/>
+		<p><a class="btn btn-success" onclick="makePoem();">Write me a poem</a> <a class="btn btn-dark" href="https://github.com/rlowe0008/markov-poetry/tree/master" target="_blank" rel="noopener">Learn more</a></p>
+	</div>
+
+	<div id="learn-panel">
+		<h3 class="main-title mini">ABOUT</h3>
+		<p>This is a web app that writes poetry using <a href="https://en.wikipedia.org/wiki/Markov_chain" target="_blank" rel="noopener">Markov Chains</a>, using data from various poems and texts from <a href="https://www.gutenberg.org">Project Gutenberg</a>. Rhyming words come from <a href="https://archive.org/details/dictionaryofengl00collrich">A Dictionary of English Rhymes</a>.</p>
+	</div>
+
+	<div align="center" id="poetry-div">
+		<h3 class="main-title mini" id="poem-title">"POEM"</h3>
+		<p id="poetry-p"></p>
+		<p><a class="btn btn-warning" onclick="setPreset(false);">New Poem</a> <a class="btn btn-primary" href="#" onclick="share();">Tweet Poem</a></p>
+	</div>
+
+</body>
+</html>
