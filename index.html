@@ -3,7 +3,6 @@
 <head>
 	<title>Markov Poetry</title>
 	<meta charset="UTF-8">
-	<script src="data.js"></script>
 	<link rel="stylesheet" href="bootstrap.min.css">
 	<link href="https://fonts.googleapis.com/css?family=EB+Garamond" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
@@ -62,12 +61,16 @@
 		var preset_val;
 		var poem = '';
 
+		var rhymes_array;
+		var probability_map;
+		var words_array;
+
 		var presets = [['ABAB', 'Alternate Rhyme'], ['AABB', 'Couplet'], ['ABBA', 'Enclosed Rhyme'], ['ABABCDCDEFEFGG', 'English Sonnet'], ['ABBAABBACDECDE', 'Petrarchan Sonnet']];
 
 		function setPreset(is_load=true){
 			preset_num = Math.floor(Math.random() * presets.length);
 			preset_val = presets[preset_num][0];
-			document.getElementById("scheme-example").innerHTML = preset_val + ' (' + presets[preset_num][1] + ')';
+			$("#scheme-example").html(preset_val + ' (' + presets[preset_num][1] + ')');
 			if (is_load){
 				$("#poetry-div").fadeToggle(0);
 				$("#learn-panel").fadeToggle(0);
@@ -78,6 +81,18 @@
 		}
 
 		function makePoem(){
+			if (words_array === undefined){
+				$("#pwrite").html("Loading...");
+				$.getScript("data.js", function(){
+					formPoem();
+					$("#pwrite").html("Write me a poem");
+				});
+			}else{
+				formPoem();
+			}
+		}
+
+		function formPoem(){
 			poem = '';
 			scheme = document.getElementById("rhyme").value;
 			if (scheme.length > 14){
@@ -113,17 +128,20 @@
 				while (poem.includes("â")){
 					poem = poem.replace("â", "");
 				}
-				document.getElementById("poetry-p").innerHTML = poem;
-				document.getElementById("poetry-div").style.visibility = 'visible';
+				$("#poem-body").html(poem);
+
 				$("#poetry-div").fadeToggle('slow');
-				document.getElementById("poem-title").innerHTML = '"' + poem.split(" ")[0] + '"';
+
+				$("#poem-title").html('"' + poem.split(" ")[0] + '"');
+
+				$("#tweeter").attr("href", share());
 			}else{
 				alert("Please enter a rhyme scheme.");
 			}
 		}
 
 		function usePreset(){
-			document.getElementById("rhyme").value = preset_val;
+			$("#rhyme").val(preset_val);
 		}
 
 		function share(){
@@ -131,8 +149,8 @@
 			while (share_poem.includes("<br>")){
 				share_poem = share_poem.replace("<br>", "\n")
 			}
-			share_poem = "\n" + share_poem + "\n"
-			window.location.href = "https://twitter.com/intent/tweet?text=Check out this Markov Poem - make your own at https://rlowe0008.github.io/markov-poetry/" + encodeURI(share_poem) + '&hashtags=markovpoetry';
+			share_poem = '\n"' + share_poem.substr(0, share_poem.length - 1) + '"\n'
+			return (encodeURI("https://twitter.com/intent/tweet?text=Check out this Markov Poem - make your own at https://rlowe0008.github.io/markov-poetry/" + share_poem + '&hashtags=markovpoetry'));
 		}
 	</script>
 </head>
@@ -145,18 +163,18 @@
 		<p>Choose a rhyme scheme, for example <a id="scheme-example" onclick="usePreset();" href="#">ABAB</a></p>
 
 		<input type="text" id="rhyme"/>
-		<p><a class="btn btn-success" onclick="makePoem();">Write me a poem</a> <a class="btn btn-dark" href="https://github.com/rlowe0008/markov-poetry/tree/master" target="_blank" rel="noopener">Learn more</a></p>
+		<p><a class="btn btn-success" onclick="makePoem();" id="pwrite">Write me a poem</a> <a class="btn btn-dark" href="https://github.com/rlowe0008/markov-poetry/tree/master" target="_blank" rel="noopener">Learn more</a></p>
 	</div>
 
 	<div id="learn-panel">
-		<h3 class="main-title mini">ABOUT</h3>
-		<p>This is a web app that writes poetry using <a href="https://en.wikipedia.org/wiki/Markov_chain" target="_blank" rel="noopener">Markov Chains</a>, using data from various poems and texts from <a href="https://www.gutenberg.org">Project Gutenberg</a>. Rhyming words come from <a href="https://archive.org/details/dictionaryofengl00collrich">A Dictionary of English Rhymes</a>.</p>
+		<h3 class="main-title mini">JavaScript is disabled</h3>
+		<p>JavaScript is disabled! Please enable JavaScript to use this web app.</p>
 	</div>
 
 	<div align="center" id="poetry-div">
 		<h3 class="main-title mini" id="poem-title">"POEM"</h3>
-		<p id="poetry-p"></p>
-		<p><a class="btn btn-warning" onclick="setPreset(false);">New Poem</a> <a class="btn btn-primary" href="#" onclick="share();">Tweet Poem</a></p>
+		<p id="poem-body"></p>
+		<p><a class="btn btn-warning" onclick="setPreset(false);">New Poem</a> <a class="btn btn-primary" href="#" target="_blank" rel="noopener" id="tweeter">Tweet Poem</a></p>
 	</div>
 
 </body>
